@@ -1,0 +1,57 @@
+# A string used to distinguish different Supabase projects on the same host. Defaults to the working
+# directory name when running `supabase init`.
+
+project_id = "njinutlkrgosnzvaltpd"
+
+[auth]
+site_url = "http://localhost:3000"
+additional_redirect_urls = ["https://localhost:3000"]
+enable_signup = true
+jwt_expiry = 3600
+
+[auth.email]
+enable_signup = true
+double_confirm_changes = true
+enable_confirmations = false
+
+[auth.external.google]
+enabled = true
+client_id = "YOUR_GOOGLE_CLIENT_ID"
+secret = "YOUR_GOOGLE_CLIENT_SECRET"
+redirect_uri = "http://localhost:3000/dashboard"
+
+[auth.external.apple]
+enabled = false
+client_id = ""
+secret = ""
+redirect_uri = ""
+url = ""
+
+[api]
+port = 34321
+schemas = ["public", "storage", "graphql_public"]
+extra_search_path = ["public", "extensions"]
+max_rows = 1000
+
+[db]
+port = 34322
+major_version = 15
+
+[studio]
+port = 34323
+
+[inbucket]
+port = 34324
+smtp_port = 34325
+pop3_port = 34326
+
+[storage]
+file_size_limit = "50MiB"
+
+[analytics]
+enabled = false
+port = 34327
+vector_port = 34328
+gcp_project_id = ""
+gcp_project_number = ""
+gcp_jwt_path = "supabase/gcloud.json"
