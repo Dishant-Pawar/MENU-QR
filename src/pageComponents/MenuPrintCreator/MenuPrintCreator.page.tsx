@@ -18,6 +18,9 @@ import {
 } from "./MenuPrintCreator.schema";
 import { saveFormValuesToCookies } from "./MenuPrintCreator.common";
 
+// Add this import at the top
+import { getBaseUrl } from "~/utils/getBaseUrl";
+
 export const MenuPrintCreatorPage = ({
   slug,
   initialCookiesFormValues,
@@ -192,7 +195,7 @@ export const MenuPrintCreatorPage = ({
       </div>
       <MenuPdfGenerator
         {...debouncedValues}
-        qrCodeUrl={`www.feastqr.com/menu/${slug}`}
+        qrCodeUrl={`https://your-vercel-app-name.vercel.app/menu/${slug}`}
         menuLogoImageUrl={data?.logoImageUrl ?? null}
       />
     </div>
