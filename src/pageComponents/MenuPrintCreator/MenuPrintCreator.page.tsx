@@ -195,7 +195,7 @@ export const MenuPrintCreatorPage = ({
       </div>
       <MenuPdfGenerator
         {...debouncedValues}
-        qrCodeUrl={`https://testing-code-puce.vercel.app/menu/${slug}`}
+        qrCodeUrl={`https://your-actual-vercel-domain.vercel.app/menu/-spice-route-bistro-pune-943`}
         menuLogoImageUrl={data?.logoImageUrl ?? null}
       />
     </div>
