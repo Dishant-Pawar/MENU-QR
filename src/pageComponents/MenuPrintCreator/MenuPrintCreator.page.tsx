@@ -193,12 +193,11 @@ export const MenuPrintCreatorPage = ({
           </form>
         </Form>
       </div>
-      // Then in your component:
-            <MenuPdfGenerator
-              {...debouncedValues}
-              qrCodeUrl={`https://feastqr.com/menu/${slug}`}
-              menuLogoImageUrl={data?.logoImageUrl ?? null}
-            />
+      <MenuPdfGenerator
+        {...debouncedValues}
+        qrCodeUrl={`https://testing-code-puce.vercel.app/menu/${slug}`}
+        menuLogoImageUrl={data?.logoImageUrl ?? null}
+      />
     </div>
   );
 };
