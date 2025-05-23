@@ -2,9 +2,11 @@ import { useServerTranslation } from "~/i18n";
 import { DashboardHeader } from "~/pageComponents/Dashboard/molecules/Header";
 import { DashboardShell } from "~/pageComponents/Dashboard/molecules/Shell";
 
+export const dynamic = 'force-dynamic';
+
 export default async function Page() {
   const { t } = await useServerTranslation();
-
+  
   return (
     <DashboardShell className="flex-1">
       <DashboardHeader
