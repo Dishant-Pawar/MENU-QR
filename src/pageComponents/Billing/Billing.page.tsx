@@ -3,6 +3,8 @@ import { DashboardHeader } from "../Dashboard/molecules/Header";
 import { DashboardShell } from "../Dashboard/molecules/Shell";
 import { useServerTranslation } from "~/i18n";
 
+export const dynamic = 'force-dynamic';
+
 export const BillingPage = async () => {
   const { t } = await useServerTranslation();
 
