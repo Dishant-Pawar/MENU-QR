@@ -1,11 +1,14 @@
-# A string used to distinguish different Supabase projects on the same host. Defaults to the working
-# directory name when running `supabase init`.
-
-project_id = "njinutlkrgosnzvaltpd"
+# A string used to distinguish different Supabase projects on the same host.
+# Set SUPABASE_PROJECT_ID in your .env file
+project_id = "${SUPABASE_PROJECT_ID}"
 
 [auth]
-site_url = "http://localhost:3000"
-additional_redirect_urls = ["https://localhost:3000"]
+# The main site URL for authentication redirects
+# Set SUPABASE_SITE_URL in your .env file
+site_url = "${SUPABASE_SITE_URL}"
+# Additional allowed redirect URLs (comma-separated in .env)
+# Set SUPABASE_ADDITIONAL_REDIRECT_URLS in your .env file
+additional_redirect_urls = [${SUPABASE_ADDITIONAL_REDIRECT_URLS}]
 enable_signup = true
 jwt_expiry = 3600
 
@@ -16,42 +19,51 @@ enable_confirmations = false
 
 [auth.external.google]
 enabled = true
-client_id = "YOUR_GOOGLE_CLIENT_ID"
-secret = "YOUR_GOOGLE_CLIENT_SECRET"
-redirect_uri = "http://localhost:3000/dashboard"
+# Google OAuth client ID and secret
+# Set GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET in your .env file
+client_id = "${GOOGLE_CLIENT_ID}"
+secret = "${GOOGLE_CLIENT_SECRET}"
+# Google OAuth redirect URI
+# Set GOOGLE_REDIRECT_URI in your .env file
+redirect_uri = "${GOOGLE_REDIRECT_URI}"
 
 [auth.external.apple]
 enabled = false
-client_id = ""
-secret = ""
-redirect_uri = ""
-url = ""
+client_id = "${APPLE_CLIENT_ID}"
+secret = "${APPLE_CLIENT_SECRET}"
+redirect_uri = "${APPLE_REDIRECT_URI}"
+url = "${APPLE_URL}"
 
 [api]
-port = 34321
+# API port (set SUPABASE_API_PORT in .env)
+port = ${SUPABASE_API_PORT}
 schemas = ["public", "storage", "graphql_public"]
 extra_search_path = ["public", "extensions"]
 max_rows = 1000
 
 [db]
-port = 34322
+# DB port (set SUPABASE_DB_PORT in .env)
+port = ${SUPABASE_DB_PORT}
 major_version = 15
 
 [studio]
-port = 34323
+# Studio port (set SUPABASE_STUDIO_PORT in .env)
+port = ${SUPABASE_STUDIO_PORT}
 
 [inbucket]
-port = 34324
-smtp_port = 34325
-pop3_port = 34326
+# Inbucket ports (set in .env)
+port = ${SUPABASE_INBUCKET_PORT}
+smtp_port = ${SUPABASE_INBUCKET_SMTP_PORT}
+pop3_port = ${SUPABASE_INBUCKET_POP3_PORT}
 
 [storage]
 file_size_limit = "50MiB"
 
 [analytics]
 enabled = false
-port = 34327
-vector_port = 34328
-gcp_project_id = ""
-gcp_project_number = ""
-gcp_jwt_path = "supabase/gcloud.json"
+# Analytics ports (set in .env)
+port = ${SUPABASE_ANALYTICS_PORT}
+vector_port = ${SUPABASE_ANALYTICS_VECTOR_PORT}
+gcp_project_id = "${SUPABASE_GCP_PROJECT_ID}"
+gcp_project_number = "${SUPABASE_GCP_PROJECT_NUMBER}"
+gcp_jwt_path = "${SUPABASE_GCP_JWT_PATH}"
