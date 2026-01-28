@@ -41,7 +41,7 @@ const generateMenuSlug = ({ name, city }: { name: string; city: string }) => {
 // export const POLISH_LANGUAGE_NAME = "Polish";
 
 // To this (use this instead)
-export const DEFAULT_LANGUAGE_ID = "56ef000f-2a05-41ab-bbfa-6f1a619306ed"; // English
+export const DEFAULT_LANGUAGE_ID = "a6a94629-8821-4da2-84c1-fa6280feca47"; // English
 
 const getFullMenu = async (slug: string, db: PrismaClient) =>
   db.menus.findFirst({

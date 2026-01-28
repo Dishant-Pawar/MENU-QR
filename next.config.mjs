@@ -20,7 +20,7 @@ const config = {
         hostname: "localhost",
       },
       {
-        hostname: "njinutlkrgosnzvaltpd.supabase.co",
+        hostname: "pwlbowhzyxqvihiygnlh.supabase.co",
       },
     ],
   },
