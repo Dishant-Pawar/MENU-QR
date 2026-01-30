@@ -46,6 +46,13 @@ type Payload = {
 
 export const POST = async (request: NextRequest) => {
   try {
+    // Check if Lemon Squeezy is configured
+    if (!env.LEMONS_SQUEEZY_SIGNATURE_SECRET) {
+      return new Response("Payment system not configured.", {
+        status: 503,
+      });
+    }
+
     const text = await request.text();
     const hmac = crypto.createHmac(
       "sha256",
