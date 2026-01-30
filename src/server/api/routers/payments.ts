@@ -5,14 +5,17 @@ import { TRPCError } from "@trpc/server";
 import { checkIfSubscribed } from "~/shared/hooks/useUserSubscription";
 import { z } from "zod";
 
-// Initialize Lemon Squeezy client with runtime validation
-const apiKey = env.LEMON_SQUEEZY_API_KEY;
-if (!apiKey) {
-  throw new Error(
-    "LEMON_SQUEEZY_API_KEY is required for payments functionality. Please configure this environment variable."
-  );
+// Lazy client getter - validates only when actually used (not at build time)
+function getLemonSqueezyClient(): LemonsqueezyClient {
+  const apiKey = env.LEMON_SQUEEZY_API_KEY;
+  if (!apiKey) {
+    throw new TRPCError({
+      code: "INTERNAL_SERVER_ERROR",
+      message: "Payment system not configured. Please contact support.",
+    });
+  }
+  return new LemonsqueezyClient(apiKey);
 }
-const client = new LemonsqueezyClient(apiKey);
 
 const createPremiumCheckoutSchema = z.object({
   language: z.enum(["en", "pl"]),
@@ -61,7 +64,7 @@ export const paymentsRouter = createTRPCRouter({
         });
       }
       
-      const newCheckout = await client.createCheckout({
+      const newCheckout = await getLemonSqueezyClient().createCheckout({
         checkout_data: {
           custom: {
             // eslint-disable-next-line @typescript-eslint/ban-ts-comment
@@ -98,7 +101,7 @@ export const paymentsRouter = createTRPCRouter({
 
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-ignore
-    const updateResult = await client.updateSubscription({
+    const updateResult = await getLemonSqueezyClient().updateSubscription({
       id: subscription.lemonSqueezyId,
       cancelled: true,
     });
@@ -142,7 +145,7 @@ export const paymentsRouter = createTRPCRouter({
       });
     }
 
-    const subscriptionResult = await client.retrieveSubscription({
+    const subscriptionResult = await getLemonSqueezyClient().retrieveSubscription({
       id: subscription.lemonSqueezyId,
     });
 
