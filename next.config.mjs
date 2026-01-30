@@ -7,20 +7,29 @@ await import("./src/env.mjs");
 /** @type {import("next").NextConfig} */
 const config = {
   reactStrictMode: true,
+  // Production optimizations
+  swcMinify: true,
+  poweredByHeader: false,
+  compress: true,
   images: {
     remotePatterns: [
       {
+        protocol: "https",
         hostname: "flagsapi.com",
       },
       {
+        protocol: "https",
         hostname: "feastqr.com",
       },
       {
+        protocol: "https",
+        hostname: "**.supabase.co",
+      },
+      // Only allow localhost in development
+      ...(process.env.NODE_ENV === "development" ? [{
+        protocol: "http",
         hostname: "localhost",
-      },
-      {
-        hostname: "pwlbowhzyxqvihiygnlh.supabase.co",
-      },
+      }] : []),
     ],
   },
   /**

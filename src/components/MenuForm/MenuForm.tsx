@@ -85,9 +85,12 @@ export const useUpsertMenu = () => {
 
       router.push(`/menu/manage/${newMenu.slug}/restaurant`);
     } catch (error) {
+      // Log error for production debugging
+      console.error("[MenuForm] Failed to create/update menu:", error);
+      
       toast({
-        title: "Coś poszło nie tak",
-        description: "Odśwież stronę i spróbuj ponownie",
+        title: "Something went wrong",
+        description: "Please refresh the page and try again. If the issue persists, contact support@feastqr.com",
         variant: "destructive",
         duration: 5000,
       });
