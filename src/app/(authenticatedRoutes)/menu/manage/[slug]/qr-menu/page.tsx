@@ -3,6 +3,9 @@ import { pdfGenerationValuesCookieName } from "~/pageComponents/MenuPrintCreator
 import { MenuPrintCreatorPage } from "~/pageComponents/MenuPrintCreator/MenuPrintCreator.page";
 import { type PrintCreatorFormValues } from "~/pageComponents/MenuPrintCreator/MenuPrintCreator.schema";
 
+// Force dynamic rendering - this route requires authentication
+export const dynamic = "force-dynamic";
+
 const getFormValuesFromCookies = (): PrintCreatorFormValues | null => {
   const getCookies = cookies();
   const formValuesString = getCookies.get(pdfGenerationValuesCookieName)?.value;
