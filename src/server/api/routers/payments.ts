@@ -5,7 +5,14 @@ import { TRPCError } from "@trpc/server";
 import { checkIfSubscribed } from "~/shared/hooks/useUserSubscription";
 import { z } from "zod";
 
-const client = new LemonsqueezyClient(env.LEMON_SQUEEZY_API_KEY);
+// Initialize Lemon Squeezy client with runtime validation
+const apiKey = env.LEMON_SQUEEZY_API_KEY;
+if (!apiKey) {
+  throw new Error(
+    "LEMON_SQUEEZY_API_KEY is required for payments functionality. Please configure this environment variable."
+  );
+}
+const client = new LemonsqueezyClient(apiKey);
 
 const createPremiumCheckoutSchema = z.object({
   language: z.enum(["en", "pl"]),
