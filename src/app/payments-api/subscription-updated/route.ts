@@ -50,17 +50,8 @@ export const POST = async (request: NextRequest) => {
   try {
     const text = await request.text();
     
-    // Environment-aware signature verification (mandatory in production, optional in dev)
+    // Optional signature verification - only validates if secret is configured
     const secret = env.LEMONS_SQUEEZY_SIGNATURE_SECRET;
-    const isProd = process.env.NODE_ENV === "production";
-    
-    if (!secret) {
-      if (isProd) {
-        throw new Error("Missing LEMONS_SQUEEZY_SIGNATURE_SECRET in production");
-      } else {
-        console.warn("⚠️ Signature verification disabled (dev mode)");
-      }
-    }
     
     if (secret) {
       // TypeScript now knows secret is a valid string
