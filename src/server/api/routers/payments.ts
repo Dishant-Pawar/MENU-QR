@@ -49,6 +49,18 @@ export const paymentsRouter = createTRPCRouter({
     .mutation(async ({ ctx, input }) => {
       const language = input.language;
       const translations = checkoutTranslations[language];
+      
+      // Validate required Lemon Squeezy configuration
+      const storeId = env.LEMON_SQUEEZY_STORE_ID;
+      const variantId = env.LEMON_SQUEEZY_SUBSCRIPTION_VARIANT_ID;
+      
+      if (!storeId || !variantId) {
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Payment system not configured. Please contact support.",
+        });
+      }
+      
       const newCheckout = await client.createCheckout({
         checkout_data: {
           custom: {
@@ -63,8 +75,8 @@ export const paymentsRouter = createTRPCRouter({
           embed: true,
         },
 
-        store: env.LEMON_SQUEEZY_STORE_ID,
-        variant: env.LEMON_SQUEEZY_SUBSCRIPTION_VARIANT_ID,
+        store: storeId,
+        variant: variantId,
         product_options: translations,
       });
 
