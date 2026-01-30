@@ -1,1 +1,31 @@
-pnpm lint && pnpm format
+#!/usr/bin/env sh
+. "$(dirname -- "$0")/_/husky.sh"
+
+echo "🔍 Running pre-commit checks..."
+
+# Type check
+echo "📝 Type checking..."
+pnpm tsc --noEmit || {
+  echo "❌ Type check failed"
+  exit 1
+}
+
+# Run tests
+echo "🧪 Running tests..."
+pnpm test:run || {
+  echo "❌ Tests failed"
+  exit 1
+}
+
+# Security check - look for common issues
+echo "🔒 Security check..."
+if grep -r "console.log" src/ --exclude-dir=__tests__ > /dev/null 2>&1; then
+  echo "⚠️  Warning: console.log statements found in src/"
+fi
+
+if grep -rE "(password|secret|api_key|token).*=.*['\"][^'\"]{8,}" src/ --exclude-dir=__tests__ > /dev/null 2>&1; then
+  echo "❌ Potential hardcoded secrets detected!"
+  exit 1
+fi
+
+echo "✅ Pre-commit checks passed!"

@@ -1,0 +1,100 @@
+name: CI Tests
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        node-version: [18.x, 20.x]
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Setup Node.js ${{ matrix.node-version }}
+      uses: actions/setup-node@v3
+      with:
+        node-version: ${{ matrix.node-version }}
+
+    - name: Install pnpm
+      uses: pnpm/action-setup@v2
+      with:
+        version: 10
+
+    - name: Get pnpm store directory
+      id: pnpm-cache
+      shell: bash
+      run: |
+        echo "STORE_PATH=$(pnpm store path)" >> $GITHUB_OUTPUT
+
+    - name: Setup pnpm cache
+      uses: actions/cache@v3
+      with:
+        path: ${{ steps.pnpm-cache.outputs.STORE_PATH }}
+        key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+        restore-keys: |
+          ${{ runner.os }}-pnpm-store-
+
+    - name: Install dependencies
+      run: pnpm install --frozen-lockfile
+
+    - name: Run type check
+      run: pnpm check-types
+
+    - name: Run linter
+      run: pnpm lint
+
+    - name: Run tests
+      run: pnpm test:run
+
+    - name: Generate coverage report
+      run: pnpm test:coverage
+
+    - name: Upload coverage to Codecov
+      uses: codecov/codecov-action@v3
+      with:
+        files: ./coverage/coverage-final.json
+        flags: unittests
+        name: codecov-umbrella
+        fail_ci_if_error: false
+
+  performance-check:
+    runs-on: ubuntu-latest
+    needs: test
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: 18.x
+
+    - name: Install pnpm
+      uses: pnpm/action-setup@v2
+      with:
+        version: 10
+
+    - name: Install dependencies
+      run: pnpm install --frozen-lockfile
+
+    - name: Check for hardcoded routes
+      run: node scripts/check-routes.js
+
+    - name: Build project
+      run: pnpm build
+      env:
+        # Use dummy env vars for build
+        DATABASE_URL: postgresql://dummy:dummy@localhost:5432/dummy
+        DIRECT_URL: postgresql://dummy:dummy@localhost:5432/dummy
+        NEXT_PUBLIC_SUPABASE_URL: https://dummy.supabase.co
+        NEXT_PUBLIC_SUPABASE_ANON_KEY: dummy
+        SUPABASE_SERVICE_KEY: dummy

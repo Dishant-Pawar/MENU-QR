@@ -3,6 +3,7 @@ import { type NextRequest, NextResponse } from "next/server";
 import { fallbackLng, languages } from "./i18n/settings";
 import { getLanguageFromAcceptHeader, getLanguageFromCookie } from "./i18n";
 import { langaugeCookieExpirationTimeMs } from "./providers/I18NextProvider/I18NextProvider";
+import { shouldSkipLogging } from "./middleware/performance-logger.middleware";
 
 acceptLanguage.languages(languages as unknown as string[]);
 
@@ -21,6 +22,9 @@ const hasLanguageInHeader = (req: NextRequest) => {
 };
 
 export async function middleware(req: NextRequest) {
+  // Start performance tracking
+  const startTime = performance.now();
+  
   const response = NextResponse.next();
 
   if (
@@ -45,6 +49,21 @@ export async function middleware(req: NextRequest) {
     response.cookies.set(cookieName, language, {
       expires: new Date(Date.now() + langaugeCookieExpirationTimeMs),
     });
+  }
+
+  // Add performance logging
+  if (!shouldSkipLogging(req.nextUrl.pathname)) {
+    const duration = Math.round(performance.now() - startTime);
+    response.headers.set('X-Response-Time', `${duration}ms`);
+    
+    // Log performance in development
+    if (process.env.NODE_ENV === 'development') {
+      const color = duration < 100 ? '\x1b[32m' : duration < 500 ? '\x1b[33m' : '\x1b[31m';
+      const reset = '\x1b[0m';
+      console.log(
+        `${color}[PERF]${reset} ${req.method} ${req.nextUrl.pathname} - ${duration}ms`
+      );
+    }
   }
 
   return response;

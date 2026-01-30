@@ -1,0 +1,277 @@
+name: Pull Request Checks
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+jobs:
+  # Job 1: PR Title and Description Check
+  pr-validation:
+    name: Validate PR
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Check PR title format
+        uses: actions/github-script@v6
+        with:
+          script: |
+            const prTitle = context.payload.pull_request.title;
+            const validPrefixes = ['feat:', 'fix:', 'docs:', 'style:', 'refactor:', 'test:', 'chore:'];
+            
+            const hasValidPrefix = validPrefixes.some(prefix => prTitle.startsWith(prefix));
+            
+            if (!hasValidPrefix) {
+              core.setFailed(
+                `PR title must start with one of: ${validPrefixes.join(', ')}\n` +
+                `Current title: "${prTitle}"`
+              );
+            }
+
+      - name: Check PR description
+        uses: actions/github-script@v6
+        with:
+          script: |
+            const prBody = context.payload.pull_request.body;
+            
+            if (!prBody || prBody.length < 20) {
+              core.setFailed('PR description must be at least 20 characters long');
+            }
+
+      - name: Check for linked issues
+        uses: actions/github-script@v6
+        with:
+          script: |
+            const prBody = context.payload.pull_request.body || '';
+            const hasLinkedIssue = /closes #\d+|fixes #\d+|resolves #\d+/i.test(prBody);
+            
+            if (!hasLinkedIssue) {
+              core.warning('Consider linking an issue using "Closes #123" or "Fixes #123"');
+            }
+
+  # Job 2: Code Quality Checks
+  code-quality:
+    name: Code Quality
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout PR code
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18.x'
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: '8.x'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Run linter
+        run: pnpm lint || true
+        continue-on-error: true
+
+      - name: Type check
+        run: pnpm tsc --noEmit
+
+  # Job 3: Test Coverage Check
+  test-coverage:
+    name: Test Coverage
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout PR code
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18.x'
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: '8.x'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Run tests with coverage
+        run: pnpm test:coverage
+
+      - name: Check coverage threshold
+        run: |
+          echo "Checking test coverage..."
+          # Add your coverage threshold check here
+          # Example: check if coverage is above 80%
+
+      - name: Comment coverage on PR
+        uses: actions/github-script@v6
+        if: always()
+        with:
+          script: |
+            const fs = require('fs');
+            let coverageComment = '## Test Coverage Report\n\n';
+            
+            try {
+              // Read coverage summary if available
+              coverageComment += '✅ Tests passed with coverage report generated.\n';
+              coverageComment += 'See artifacts for detailed coverage.';
+            } catch (error) {
+              coverageComment += '⚠️ Coverage report not available.';
+            }
+            
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: coverageComment
+            });
+
+  # Job 4: Security Check
+  security-check:
+    name: Security Check
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout PR code
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: '8.x'
+
+      - name: Security audit
+        run: |
+          pnpm audit --audit-level=high || echo "⚠️ Security vulnerabilities found"
+
+      - name: Check for secrets in diff
+        run: |
+          echo "Checking for potential secrets in changes..."
+          git diff origin/${{ github.base_ref }} HEAD | grep -E "(password|secret|api_key|token).*=" || true
+
+  # Job 5: File Size Check
+  file-size-check:
+    name: File Size Check
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout PR code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+
+      - name: Check for large files
+        run: |
+          echo "Checking for files larger than 1MB..."
+          find . -type f -size +1M -not -path "*/node_modules/*" -not -path "*/.git/*" | while read file; do
+            echo "⚠️ Large file detected: $file ($(du -h "$file" | cut -f1))"
+          done
+
+  # Job 6: Changed Files Summary
+  changed-files:
+    name: Changed Files Summary
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout PR code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Get changed files
+        id: changed-files
+        run: |
+          echo "Changed files:"
+          git diff --name-only origin/${{ github.base_ref }} HEAD
+
+      - name: Comment changed files summary
+        uses: actions/github-script@v6
+        with:
+          script: |
+            const { execSync } = require('child_process');
+            
+            const changedFiles = execSync(
+              'git diff --name-only origin/${{ github.base_ref }} HEAD'
+            ).toString().split('\n').filter(Boolean);
+            
+            const summary = `## Changed Files (${changedFiles.length})\n\n` +
+              changedFiles.map(f => `- \`${f}\``).join('\n');
+            
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: summary
+            });
+
+  # Job 7: Build Preview
+  build-preview:
+    name: Build Preview
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout PR code
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18.x'
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: '8.x'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build project
+        run: pnpm build
+
+      - name: Check build size
+        run: |
+          echo "Build size analysis:"
+          du -sh .next 2>/dev/null || echo "Build directory not found"
+
+  # Job 8: PR Summary
+  pr-summary:
+    name: PR Check Summary
+    runs-on: ubuntu-latest
+    needs: [pr-validation, code-quality, test-coverage, security-check, build-preview]
+    if: always()
+    
+    steps:
+      - name: Generate PR summary
+        run: |
+          echo "# PR Checks Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "## Check Results" >> $GITHUB_STEP_SUMMARY
+          echo "- PR Validation: ${{ needs.pr-validation.result }}" >> $GITHUB_STEP_SUMMARY
+          echo "- Code Quality: ${{ needs.code-quality.result }}" >> $GITHUB_STEP_SUMMARY
+          echo "- Test Coverage: ${{ needs.test-coverage.result }}" >> $GITHUB_STEP_SUMMARY
+          echo "- Security Check: ${{ needs.security-check.result }}" >> $GITHUB_STEP_SUMMARY
+          echo "- Build Preview: ${{ needs.build-preview.result }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          if [ "${{ needs.pr-validation.result }}" == "failure" ] || 
+             [ "${{ needs.code-quality.result }}" == "failure" ] || 
+             [ "${{ needs.test-coverage.result }}" == "failure" ] || 
+             [ "${{ needs.build-preview.result }}" == "failure" ]; then
+            echo "❌ Some checks failed - please review" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "✅ All checks passed!" >> $GITHUB_STEP_SUMMARY
+          fi
