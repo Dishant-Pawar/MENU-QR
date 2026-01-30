@@ -41,7 +41,21 @@ const generateMenuSlug = ({ name, city }: { name: string; city: string }) => {
 // export const POLISH_LANGUAGE_NAME = "Polish";
 
 // To this (use this instead)
-export const DEFAULT_LANGUAGE_ID = "a6a94629-8821-4da2-84c1-fa6280feca47"; // English
+// Default English language - will be fetched dynamically
+const getDefaultLanguage = async (db: PrismaClient) => {
+  const englishLanguage = await db.languages.findFirst({
+    where: { isoCode: "en" },
+  });
+  
+  if (!englishLanguage) {
+    throw new TRPCError({
+      code: "INTERNAL_SERVER_ERROR",
+      message: "Default language not found. Please run language seed script.",
+    });
+  }
+  
+  return englishLanguage;
+};
 
 const getFullMenu = async (slug: string, db: PrismaClient) =>
   db.menus.findFirst({
@@ -191,6 +205,9 @@ export const menusRouter = createTRPCRouter({
   upsertMenu: privateProcedure
     .input(menuValidationSchema)
     .mutation(async ({ ctx, input }) => {
+      // Get default language dynamically
+      const defaultLanguage = await getDefaultLanguage(ctx.db);
+      
       return await ctx.db.menus.upsert({
         where: {
           id: input.id || "00000000-0000-0000-0000-000000000000",
@@ -212,7 +229,7 @@ export const menusRouter = createTRPCRouter({
               isDefault: true,
               languages: {
                 connect: {
-                  id: DEFAULT_LANGUAGE_ID, // English language ID
+                  id: defaultLanguage.id,
                 },
               },
             },
