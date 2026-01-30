@@ -12,11 +12,13 @@ afterEach(() => {
   cleanup();
 });
 
-// Mock environment variables
-process.env.NODE_ENV = 'test';
-process.env.NEXT_PUBLIC_SUPABASE_URL = 'https://test.supabase.co';
-process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY = 'test-key';
-process.env.DATABASE_URL = 'postgresql://test:test@localhost:5432/test';
+// Mock environment variables (using Object.defineProperty to avoid read-only errors)
+if (typeof process !== 'undefined' && process.env) {
+  Object.defineProperty(process.env, 'NODE_ENV', { value: 'test', writable: true });
+  Object.defineProperty(process.env, 'NEXT_PUBLIC_SUPABASE_URL', { value: 'https://test.supabase.co', writable: true });
+  Object.defineProperty(process.env, 'NEXT_PUBLIC_SUPABASE_ANON_KEY', { value: 'test-key', writable: true });
+  Object.defineProperty(process.env, 'DATABASE_URL', { value: 'postgresql://test:test@localhost:5432/test', writable: true });
+}
 
 // Global test utilities
 global.console = {
