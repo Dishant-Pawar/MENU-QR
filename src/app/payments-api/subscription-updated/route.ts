@@ -1,8 +1,8 @@
-import crypto from "crypto";
 import { type listAllSubscriptions } from "lemonsqueezy.ts";
 import { type NextRequest } from "next/server";
-import { env } from "~/env.mjs";
 import { supabase } from "~/server/supabase/supabaseClient";
+
+// Note: Signature verification disabled - configure LEMONS_SQUEEZY_SIGNATURE_SECRET to enable
 
 // Put this in your billing lib and just import the type instead
 type LemonsqueezySubscription = Awaited<
