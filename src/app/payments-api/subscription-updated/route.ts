@@ -50,19 +50,21 @@ export const POST = async (request: NextRequest) => {
   try {
     const text = await request.text();
     
-    // Signature verification with proper TypeScript strict-mode handling
-    const signatureSecret = env.LEMONS_SQUEEZY_SIGNATURE_SECRET;
+    // Environment-aware signature verification (mandatory in production, optional in dev)
+    const secret = env.LEMONS_SQUEEZY_SIGNATURE_SECRET;
+    const isProd = process.env.NODE_ENV === "production";
     
-    if (signatureSecret) {
-      // Runtime guard ensures signatureSecret is string, not undefined
-      if (typeof signatureSecret !== "string" || signatureSecret.length === 0) {
-        throw new Error(
-          "LEMONS_SQUEEZY_SIGNATURE_SECRET is configured but invalid"
-        );
+    if (!secret) {
+      if (isProd) {
+        throw new Error("Missing LEMONS_SQUEEZY_SIGNATURE_SECRET in production");
+      } else {
+        console.warn("⚠️ Signature verification disabled (dev mode)");
       }
-
-      // TypeScript now knows signatureSecret is a valid string
-      const hmac = crypto.createHmac("sha256", signatureSecret);
+    }
+    
+    if (secret) {
+      // TypeScript now knows secret is a valid string
+      const hmac = crypto.createHmac("sha256", secret);
       const digest = Buffer.from(hmac.update(text).digest("hex"), "utf8");
       
       const signatureHeader = request.headers.get("x-signature");
