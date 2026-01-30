@@ -1,5 +1,7 @@
+import crypto from "crypto";
 import { type listAllSubscriptions } from "lemonsqueezy.ts";
 import { type NextRequest } from "next/server";
+import { env } from "~/env.mjs";
 import { supabase } from "~/server/supabase/supabaseClient";
 
 // Note: Signature verification disabled - configure LEMONS_SQUEEZY_SIGNATURE_SECRET to enable
@@ -48,15 +50,32 @@ export const POST = async (request: NextRequest) => {
   try {
     const text = await request.text();
     
-    // TODO: Add signature verification when Lemon Squeezy is configured
-    // if (env.LEMONS_SQUEEZY_SIGNATURE_SECRET) {
-    //   const hmac = crypto.createHmac("sha256", env.LEMONS_SQUEEZY_SIGNATURE_SECRET);
-    //   const digest = Buffer.from(hmac.update(text).digest("hex"), "utf8");
-    //   const signature = Buffer.from(request.headers.get("x-signature") as string, "utf8");
-    //   if (!crypto.timingSafeEqual(digest, signature)) {
-    //     return new Response("Invalid signature.", { status: 400 });
-    //   }
-    // }
+    // Signature verification with proper TypeScript strict-mode handling
+    const signatureSecret = env.LEMONS_SQUEEZY_SIGNATURE_SECRET;
+    
+    if (signatureSecret) {
+      // Runtime guard ensures signatureSecret is string, not undefined
+      if (typeof signatureSecret !== "string" || signatureSecret.length === 0) {
+        throw new Error(
+          "LEMONS_SQUEEZY_SIGNATURE_SECRET is configured but invalid"
+        );
+      }
+
+      // TypeScript now knows signatureSecret is a valid string
+      const hmac = crypto.createHmac("sha256", signatureSecret);
+      const digest = Buffer.from(hmac.update(text).digest("hex"), "utf8");
+      
+      const signatureHeader = request.headers.get("x-signature");
+      if (!signatureHeader) {
+        return new Response("Missing x-signature header.", { status: 400 });
+      }
+      
+      const signature = Buffer.from(signatureHeader, "utf8");
+      
+      if (!crypto.timingSafeEqual(digest, signature)) {
+        return new Response("Invalid signature.", { status: 400 });
+      }
+    }
 
     const payload = JSON.parse(text) as Payload;
     const {
