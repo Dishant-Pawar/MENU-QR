@@ -39,7 +39,7 @@ export function UserAccountNav() {
           <Link href="/dashboard/billing">{t("userAccountNav.billing")}</Link>
         </DropdownMenuItem>
         <DropdownMenuItem asChild>
-          <Link href="/dashboard/settings">{t("userAccountNav.accountSettings")}</Link>
+          <Link href="/dashboard/settings">{t("userAccountNav.settings")}</Link>
         </DropdownMenuItem>
         <DropdownMenuSeparator />
         <DropdownMenuItem
