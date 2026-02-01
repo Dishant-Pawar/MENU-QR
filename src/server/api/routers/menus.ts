@@ -208,34 +208,52 @@ export const menusRouter = createTRPCRouter({
       // Get default language dynamically
       const defaultLanguage = await getDefaultLanguage(ctx.db);
       
-      return await ctx.db.menus.upsert({
-        where: {
-          id: input.id || "00000000-0000-0000-0000-000000000000",
-          userId: ctx.user.id,
-        },
-        create: {
-          name: input.name,
-          address: input.address,
-          city: input.city,
-          slug: generateMenuSlug({
+      // If no id provided, create new menu
+      if (!input.id) {
+        return await ctx.db.menus.create({
+          data: {
             name: input.name,
+            address: input.address,
             city: input.city,
-          }),
-          userId: ctx.user.id,
-          contactNumber: input.contactPhoneNumber,
-          isPublished: false,
-          menuLanguages: {
-            create: {
-              isDefault: true,
-              languages: {
-                connect: {
-                  id: defaultLanguage.id,
+            slug: generateMenuSlug({
+              name: input.name,
+              city: input.city,
+            }),
+            userId: ctx.user.id,
+            contactNumber: input.contactPhoneNumber,
+            isPublished: false,
+            menuLanguages: {
+              create: {
+                isDefault: true,
+                languages: {
+                  connect: {
+                    id: defaultLanguage.id,
+                  },
                 },
               },
             },
           },
+        });
+      }
+      
+      // Verify user owns this menu before updating
+      const existingMenu = await ctx.db.menus.findUnique({
+        where: { id: input.id },
+        select: { userId: true },
+      });
+      
+      if (!existingMenu || existingMenu.userId !== ctx.user.id) {
+        throw new TRPCError({
+          code: "FORBIDDEN",
+          message: "You don't have permission to edit this menu",
+        });
+      }
+      
+      return await ctx.db.menus.update({
+        where: {
+          id: input.id,
         },
-        update: {
+        data: {
           name: input.name,
           address: input.address,
           city: input.city,
@@ -375,41 +393,67 @@ export const menusRouter = createTRPCRouter({
 
   upsertDish: privateProcedure
     .input(addDishValidationSchema.extend({ menuId: z.string() }))
-    .mutation(({ ctx, input }) => {
-      return ctx.db.dishes.upsert({
-        where: {
-          id: input.id || "00000000-0000-0000-0000-000000000000",
-          menus: {
-            userId: ctx.user.id,
-            id: input.menuId,
-          },
-        },
-        create: {
-          price: input.price * 100,
-          menuId: input.menuId,
-          categoryId: input.categoryId || null,
-          dishesTranslation: {
-            createMany: {
-              data: input.translatedDishData.map((translation) => ({
-                description: translation.description,
-                languageId: translation.languageId,
-                name: translation.name,
-              })),
+    .mutation(async ({ ctx, input }) => {
+      // Verify user owns this menu
+      const menu = await ctx.db.menus.findUnique({
+        where: { id: input.menuId },
+        select: { userId: true },
+      });
+      
+      if (!menu || menu.userId !== ctx.user.id) {
+        throw new TRPCError({
+          code: "FORBIDDEN",
+          message: "You don't have permission to modify this menu",
+        });
+      }
+      
+      // If no id provided, create new dish
+      if (!input.id) {
+        return await ctx.db.dishes.create({
+          data: {
+            price: input.price * 100,
+            menuId: input.menuId,
+            categoryId: input.categoryId || null,
+            dishesTranslation: {
+              createMany: {
+                data: input.translatedDishData.map((translation) => ({
+                  description: translation.description,
+                  languageId: translation.languageId,
+                  name: translation.name,
+                })),
+              },
+            },
+            carbohydrates: input.carbohydrates ?? null,
+            fats: input.fats ?? null,
+            protein: input.proteins ?? null,
+            calories: input.calories ?? null,
+            dishesTag: {
+              createMany: {
+                data: input.tags.map((tag) => ({
+                  tagName: tag,
+                })),
+              },
             },
           },
-          carbohydrates: input.carbohydrates ?? null,
-          fats: input.fats ?? null,
-          protein: input.proteins ?? null,
-          calories: input.calories ?? null,
-          dishesTag: {
-            createMany: {
-              data: input.tags.map((tag) => ({
-                tagName: tag,
-              })),
-            },
-          },
-        },
-        update: {
+        });
+      }
+      
+      // Verify dish belongs to the menu
+      const existingDish = await ctx.db.dishes.findUnique({
+        where: { id: input.id },
+        select: { menuId: true },
+      });
+      
+      if (!existingDish || existingDish.menuId !== input.menuId) {
+        throw new TRPCError({
+          code: "FORBIDDEN",
+          message: "You don't have permission to edit this dish",
+        });
+      }
+      
+      return await ctx.db.dishes.update({
+        where: { id: input.id },
+        data: {
           categoryId: input.categoryId || null,
           price: input.price * 100,
           carbohydrates: input.carbohydrates ?? null,
@@ -488,30 +532,59 @@ export const menusRouter = createTRPCRouter({
     }),
   upsertDishVariant: privateProcedure
     .input(dishVariantValidationSchema.extend({ dishId: z.string() }))
-    .mutation(({ ctx, input }) => {
-      return ctx.db.dishVariants.upsert({
-        where: {
-          id: input.id || "00000000-0000-0000-0000-000000000000",
-          dishes: {
-            menus: {
-              userId: ctx.user.id,
-            },
+    .mutation(async ({ ctx, input }) => {
+      // Verify user owns the menu that contains this dish
+      const dish = await ctx.db.dishes.findUnique({
+        where: { id: input.dishId },
+        select: {
+          menus: {
+            select: { userId: true },
           },
         },
-        create: {
-          price: input.price ? input.price * 100 : null,
-          variantTranslations: {
-            createMany: {
-              data: input.translatedVariant.map((translation) => ({
-                languageId: translation.languageId,
-                name: translation.name,
-                description: translation.description,
-              })),
+      });
+      
+      if (!dish || dish.menus.userId !== ctx.user.id) {
+        throw new TRPCError({
+          code: "FORBIDDEN",
+          message: "You don't have permission to modify this dish",
+        });
+      }
+      
+      // If no id provided, create new variant
+      if (!input.id) {
+        return await ctx.db.dishVariants.create({
+          data: {
+            price: input.price ? input.price * 100 : null,
+            variantTranslations: {
+              createMany: {
+                data: input.translatedVariant.map((translation) => ({
+                  languageId: translation.languageId,
+                  name: translation.name,
+                  description: translation.description,
+                })),
+              },
             },
+            dishId: input.dishId,
           },
-          dishId: input.dishId,
-        },
-        update: {
+        });
+      }
+      
+      // Verify variant belongs to the dish
+      const existingVariant = await ctx.db.dishVariants.findUnique({
+        where: { id: input.id },
+        select: { dishId: true },
+      });
+      
+      if (!existingVariant || existingVariant.dishId !== input.dishId) {
+        throw new TRPCError({
+          code: "FORBIDDEN",
+          message: "You don't have permission to edit this variant",
+        });
+      }
+      
+      return await ctx.db.dishVariants.update({
+        where: { id: input.id },
+        data: {
           price: input.price ? input.price * 100 : null,
           variantTranslations: {
             deleteMany: {
@@ -530,26 +603,53 @@ export const menusRouter = createTRPCRouter({
     }),
   upsertCategory: privateProcedure
     .input(addCategoryValidationSchema.extend({ menuId: z.string() }))
-    .mutation(({ ctx, input }) => {
-      return ctx.db.categories.upsert({
-        where: {
-          id: input.id || "00000000-0000-0000-0000-000000000000",
-          menus: {
-            userId: ctx.user.id,
-          },
-        },
-        create: {
-          menuId: input.menuId,
-          categoriesTranslation: {
-            createMany: {
-              data: input.translatedCategoriesData.map((translation) => ({
-                languageId: translation.languageId,
-                name: translation.name,
-              })),
+    .mutation(async ({ ctx, input }) => {
+      // Verify user owns this menu
+      const menu = await ctx.db.menus.findUnique({
+        where: { id: input.menuId },
+        select: { userId: true },
+      });
+      
+      if (!menu || menu.userId !== ctx.user.id) {
+        throw new TRPCError({
+          code: "FORBIDDEN",
+          message: "You don't have permission to modify this menu",
+        });
+      }
+      
+      // If no id provided, create new category
+      if (!input.id) {
+        return await ctx.db.categories.create({
+          data: {
+            menuId: input.menuId,
+            categoriesTranslation: {
+              createMany: {
+                data: input.translatedCategoriesData.map((translation) => ({
+                  languageId: translation.languageId,
+                  name: translation.name,
+                })),
+              },
             },
           },
-        },
-        update: {
+        });
+      }
+      
+      // Verify category belongs to the menu
+      const existingCategory = await ctx.db.categories.findUnique({
+        where: { id: input.id },
+        select: { menuId: true },
+      });
+      
+      if (!existingCategory || existingCategory.menuId !== input.menuId) {
+        throw new TRPCError({
+          code: "FORBIDDEN",
+          message: "You don't have permission to edit this category",
+        });
+      }
+      
+      return await ctx.db.categories.update({
+        where: { id: input.id },
+        data: {
           categoriesTranslation: {
             deleteMany: {
               categoryId: input.id,
