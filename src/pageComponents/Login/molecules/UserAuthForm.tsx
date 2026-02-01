@@ -20,9 +20,13 @@ import {
 } from "./UserAuthForm.schema";
 
 const signInWithOauth = async (provider: Provider, toast: ReturnType<typeof useToast>["toast"]) => {
+  const redirectUrl = process.env.NEXT_PUBLIC_APP_URL 
+    ? `${process.env.NEXT_PUBLIC_APP_URL}/dashboard`
+    : `${window.location.origin}/dashboard`;
+    
   const { error } = await supabase().auth.signInWithOAuth({
     provider: provider,
-    options: { redirectTo: `${window.location.origin}/dashboard` },
+    options: { redirectTo: redirectUrl },
   });
 
   if (error) {

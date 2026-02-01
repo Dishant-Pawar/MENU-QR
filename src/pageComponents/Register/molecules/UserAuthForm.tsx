@@ -73,11 +73,15 @@ export function UserAuthForm() {
   });
 
   const onSubmit = async (data: RegisterFormValues) => {
+    const redirectUrl = process.env.NEXT_PUBLIC_APP_URL 
+      ? `${process.env.NEXT_PUBLIC_APP_URL}/auth/confirm`
+      : `${window.location.origin}/auth/confirm`;
+      
     const { error } = await supabase().auth.signUp({
       ...data,
       options: {
         data: translations[i18n.language as "en" | "pl"],
-        emailRedirectTo: `${window.location.origin}/dashboard`,
+        emailRedirectTo: redirectUrl,
       },
     });
 
