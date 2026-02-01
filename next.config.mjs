@@ -26,10 +26,10 @@ const config = {
         hostname: "**.supabase.co",
       },
       // Only allow localhost in development
-      ...(process.env.NODE_ENV === "development" ? [/** @type {const} */ ({
+      ...(process.env.NODE_ENV === "development" ? /** @type {any} */ ([{
         protocol: "http",
         hostname: "localhost",
-      })] : []),
+      }]) : []),
     ],
   },
   /**
