@@ -2,18 +2,21 @@
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { type TFunction } from "i18next";
+import { type Provider } from "@supabase/supabase-js";
 import * as React from "react";
 import { useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import { z } from "zod";
 
 import { FormInput } from "~/components/FormInput/FormInput";
-import { Button } from "~/components/ui/button";
+import { Icons } from "~/components/Icons";
+import { Button, buttonVariants } from "~/components/ui/button";
 import { Form, FormField } from "~/components/ui/form";
 import { Input } from "~/components/ui/input";
 import { useToast } from "~/components/ui/use-toast";
 import { supabase } from "~/server/supabase/supabaseClient";
 import { type ZodReturnType } from "~/utils";
+import { cn } from "~/utils/cn";
 
 const registerValidationSchema = (translate: TFunction) =>
   z
@@ -58,6 +61,26 @@ const translations = {
     buttonText: "Kontynuuj",
     orCopyAndPaste: "lub skopiuj i wklej ten adres URL do przeglądarki:",
   },
+};
+
+const signInWithOauth = async (provider: Provider, toast: ReturnType<typeof useToast>["toast"]) => {
+  const redirectUrl = process.env.NEXT_PUBLIC_APP_URL 
+    ? `${process.env.NEXT_PUBLIC_APP_URL}/dashboard`
+    : `${window.location.origin}/dashboard`;
+    
+  const { error } = await supabase().auth.signInWithOAuth({
+    provider: provider,
+    options: { redirectTo: redirectUrl },
+  });
+
+  if (error) {
+    toast({
+      title: "OAuth Error",
+      description: error.message,
+      variant: "destructive",
+      duration: 9000,
+    });
+  }
 };
 
 export function UserAuthForm() {
@@ -152,6 +175,14 @@ export function UserAuthForm() {
           {t("register.submitButton")}
         </Button>
       </form>
+      <button
+        type="button"
+        className={cn(buttonVariants({ variant: "outline" }), "flex gap-2")}
+        onClick={() => void signInWithOauth("google", toast)}
+      >
+        <Icons.google width={16} />
+        Google
+      </button>
     </Form>
   );
 }
