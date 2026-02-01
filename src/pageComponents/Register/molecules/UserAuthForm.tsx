@@ -77,6 +77,7 @@ export function UserAuthForm() {
       ...data,
       options: {
         data: translations[i18n.language as "en" | "pl"],
+        emailRedirectTo: `${window.location.origin}/dashboard`,
       },
     });
 
