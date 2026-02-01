@@ -116,7 +116,7 @@ export function DeleteAccountSection() {
                   {...form.register("confirmEmail")}
                   type="email"
                   placeholder="Enter your email to confirm"
-                  disabled={deleteAccountMutation.isPending}
+                  disabled={deleteAccountMutation.isLoading}
                 />
                 {form.formState.errors.confirmEmail && (
                   <p className="text-sm text-destructive">
@@ -128,17 +128,17 @@ export function DeleteAccountSection() {
               <AlertDialogFooter>
                 <AlertDialogCancel 
                   onClick={() => form.reset()}
-                  disabled={deleteAccountMutation.isPending}
+                  disabled={deleteAccountMutation.isLoading}
                 >
                   Cancel
                 </AlertDialogCancel>
                 <Button
                   type="submit"
                   variant="destructive"
-                  loading={deleteAccountMutation.isPending}
-                  disabled={deleteAccountMutation.isPending || !form.watch("confirmEmail")}
+                  loading={deleteAccountMutation.isLoading}
+                  disabled={deleteAccountMutation.isLoading || !form.watch("confirmEmail")}
                 >
-                  {deleteAccountMutation.isPending ? (
+                  {deleteAccountMutation.isLoading ? (
                     <>
                       <Icons.spinner className="mr-2 h-4 w-4 animate-spin" />
                       Deleting...
