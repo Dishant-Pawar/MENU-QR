@@ -1,7 +1,6 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { isAuthError } from "@supabase/supabase-js";
 import { type TFunction } from "i18next";
 import * as React from "react";
 import { useForm } from "react-hook-form";
@@ -74,30 +73,41 @@ export function UserAuthForm() {
   });
 
   const onSubmit = async (data: RegisterFormValues) => {
-    try {
-      await supabase().auth.signUp({
-        ...data,
-        options: {
-          data: translations[i18n.language as "en" | "pl"],
-        },
-      });
+    const { error } = await supabase().auth.signUp({
+      ...data,
+      options: {
+        data: translations[i18n.language as "en" | "pl"],
+      },
+    });
 
-      toast({
-        title: t("register.checkYourEmailForConfirmation"),
-        description: t("common.confirmYourEmail"),
-        variant: "default",
-        duration: 9000,
-      });
-    } catch (e) {
-      if (isAuthError(e)) {
+    if (error) {
+      // Handle rate limit error
+      if (error.status === 429 || error.message.includes("rate limit")) {
         toast({
-          title: "Error",
-          description: e.message,
+          title: t("common.tooManyRequests"),
+          description: t("common.rateLimitError"),
           variant: "destructive",
           duration: 9000,
         });
+        return;
       }
+
+      // Handle other auth errors
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+        duration: 9000,
+      });
+      return;
     }
+
+    toast({
+      title: t("register.checkYourEmailForConfirmation"),
+      description: t("common.confirmYourEmail"),
+      variant: "default",
+      duration: 9000,
+    });
   };
 
   return (

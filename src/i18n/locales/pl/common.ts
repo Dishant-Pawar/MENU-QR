@@ -39,6 +39,8 @@ const messages = {
     emailLabel: "Email",
     passwordLabel: "Hasło",
     passwordConfirmLabel: "Potwierdź hasło",
+    tooManyRequests: "Zbyt wiele żądań",
+    rateLimitError: "Wykonałeś zbyt wiele żądań. Poczekaj kilka minut przed ponowną próbą.",
   },
   dashboard: {
     title: "Menu",

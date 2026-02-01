@@ -41,6 +41,8 @@ const messages: Resources["common"] = {
     passwordLowercaseValidation: "Password must contain a lowercase letter",
     passwordConfirmationValidation: "Passwords must match",
     confirmYourEmail: "Confirm your email",
+    tooManyRequests: "Too Many Requests",
+    rateLimitError: "You've made too many requests. Please wait a few minutes before trying again.",
   },
   dashboard: {
     title: "Menu",
