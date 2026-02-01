@@ -59,15 +59,6 @@ export const env = createEnv({
     NEXT_PUBLIC_UMAMI_URL: process.env.NEXT_PUBLIC_UMAMI_URL,
     NEXT_PUBLIC_APP_URL: process.env.NEXT_PUBLIC_APP_URL,
   },
-    NEXT_PUBLIC_UMAMI_WEBSITE_ID: process.env.NEXT_PUBLIC_UMAMI_WEBSITE_ID,
-    NEXT_PUBLIC_UMAMI_URL: process.env.NEXT_PUBLIC_UMAMI_URL,
-    LEMONS_SQUEEZY_SIGNATURE_SECRET:
-      process.env.LEMONS_SQUEEZY_SIGNATURE_SECRET,
-    LEMON_SQUEEZY_API_KEY: process.env.LEMON_SQUEEZY_API_KEY,
-    LEMON_SQUEEZY_STORE_ID: process.env.LEMON_SQUEEZY_STORE_ID,
-    LEMON_SQUEEZY_SUBSCRIPTION_VARIANT_ID:
-      process.env.LEMON_SQUEEZY_SUBSCRIPTION_VARIANT_ID,
-  },
   /**
    * Run `build` or `dev` with `SKIP_ENV_VALIDATION` to skip env validation. This is especially
    * useful for Docker builds.
