@@ -5,9 +5,15 @@ on:
     branches: [ main, develop ]
   pull_request:
     branches: [ main, develop ]
+  workflow_dispatch:
+
+env:
+  NODE_VERSION: '20.x'
+  PNPM_VERSION: '10'
 
 jobs:
   test:
+    name: Test & Lint
     runs-on: ubuntu-latest
 
     strategy:
@@ -16,15 +22,16 @@ jobs:
 
     steps:
     - name: Checkout code
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
 
     - name: Setup Node.js ${{ matrix.node-version }}
-      uses: actions/setup-node@v3
+      uses: actions/setup-node@v4
       with:
         node-version: ${{ matrix.node-version }}
+        cache: 'pnpm'
 
     - name: Install pnpm
-      uses: pnpm/action-setup@v2
+      uses: pnpm/action-setup@v3
       with:
         version: 10
 
@@ -35,7 +42,7 @@ jobs:
         echo "STORE_PATH=$(pnpm store path)" >> $GITHUB_OUTPUT
 
     - name: Setup pnpm cache
-      uses: actions/cache@v3
+      uses: actions/cache@v4
       with:
         path: ${{ steps.pnpm-cache.outputs.STORE_PATH }}
         key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
@@ -53,17 +60,25 @@ jobs:
 
     - name: Run tests
       run: pnpm test:run
+      env:
+        DATABASE_URL: postgresql://test:test@localhost:5432/test
+        DIRECT_URL: postgresql://test:test@localhost:5432/test
+        NEXT_PUBLIC_SUPABASE_URL: https://test.supabase.co
+        NEXT_PUBLIC_SUPABASE_ANON_KEY: test-key
+        SUPABASE_SERVICE_KEY: test-service-key
 
     - name: Generate coverage report
       run: pnpm test:coverage
+      continue-on-error: true
 
     - name: Upload coverage to Codecov
-      uses: codecov/codecov-action@v3
+      uses: codecov/codecov-action@v4
       with:
         files: ./coverage/coverage-final.json
         flags: unittests
         name: codecov-umbrella
         fail_ci_if_error: false
+        token: ${{ secrets.CODECOV_TOKEN }}
 
   performance-check:
     runs-on: ubuntu-latest

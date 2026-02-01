@@ -1,0 +1,41 @@
+# Auto-assign labels based on file paths
+documentation:
+  - '**/*.md'
+  - 'docs/**/*'
+
+ci-cd:
+  - '.github/workflows/**'
+  - '.github/actions/**'
+
+database:
+  - 'prisma/**/*'
+  - 'supabase/**/*'
+  - '**/*migration*'
+
+frontend:
+  - 'src/app/**/*'
+  - 'src/components/**/*'
+  - 'src/pageComponents/**/*'
+  - 'src/styles/**/*'
+
+backend:
+  - 'src/server/**/*'
+  - 'src/trpc/**/*'
+
+api:
+  - 'src/server/api/**/*'
+  - 'src/app/api/**/*'
+
+tests:
+  - '**/*.test.*'
+  - '**/*.spec.*'
+  - 'src/test/**/*'
+
+dependencies:
+  - 'package.json'
+  - 'pnpm-lock.yaml'
+
+configuration:
+  - '*.config.*'
+  - '.env*'
+  - 'tsconfig.json'
