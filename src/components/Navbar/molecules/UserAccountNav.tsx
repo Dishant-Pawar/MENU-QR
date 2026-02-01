@@ -38,6 +38,9 @@ export function UserAccountNav() {
         <DropdownMenuItem asChild>
           <Link href="/dashboard/billing">{t("userAccountNav.billing")}</Link>
         </DropdownMenuItem>
+        <DropdownMenuItem asChild>
+          <Link href="/dashboard/settings">{t("userAccountNav.accountSettings")}</Link>
+        </DropdownMenuItem>
         <DropdownMenuSeparator />
         <DropdownMenuItem
           className="cursor-pointer"

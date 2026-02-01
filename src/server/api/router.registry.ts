@@ -10,6 +10,7 @@ import { authRouter } from "./routers/auth";
 import { menusRouter } from "./routers/menus";
 import { languagesRouter } from "./routers/languages";
 import { paymentsRouter } from "./routers/payments";
+import { userRouter } from "./routers/user";
 
 /**
  * Router registry for easy management
@@ -19,6 +20,7 @@ export const ROUTER_REGISTRY = {
   auth: authRouter,
   languages: languagesRouter,
   payments: paymentsRouter,
+  user: userRouter,
 } as const;
 
 /**
@@ -43,6 +45,11 @@ export const ROUTER_METADATA = {
   payments: {
     name: 'Payments Router',
     description: 'Handles payment processing and subscriptions',
+    critical: true,
+  },
+  user: {
+    name: 'User Router',
+    description: 'Handles user account management and deletion',
     critical: true,
   },
 } as const;
