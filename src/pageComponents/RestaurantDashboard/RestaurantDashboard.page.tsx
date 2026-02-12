@@ -165,7 +165,7 @@ export const RestaurantDashboard = ({
           <div className="flex flex-col gap-4">
             <QRCode
               size={200}
-              value={`https://testing-code-puce.vercel.app/menu/${data.slug}`}
+              value={`${process.env.NEXT_PUBLIC_APP_URL || window.location.origin}/menu/${data.slug}`}
             />
             <Button
               onClick={() => router.push(`/menu/manage/${slug}/menu`)}
