@@ -2,6 +2,7 @@ import { type Metadata } from "next";
 import { api } from "~/trpc/server";
 
 export const revalidate = 60;
+export const dynamicParams = true; // Allow dynamic slugs at runtime
 export async function generateMetadata({
   params,
 }: {

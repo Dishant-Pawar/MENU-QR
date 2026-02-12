@@ -42,10 +42,11 @@ const config = {
    * @see https://github.com/vercel/next.js/issues/41980
    */
   eslint: { ignoreDuringBuilds: true },
-  i18n: {
-    locales: ["en"],
-    defaultLocale: "en",
-  },
+  // i18n config is NOT compatible with App Router - commented out
+  // i18n: {
+  //   locales: ["en"],
+  //   defaultLocale: "en",
+  // },
   async redirects() {
     return [
       {
